@@ -1,0 +1,221 @@
+---
+title: "CUNY DATA606_Lab4"
+author: "Zachary Herold"
+date: "October 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=TRUE, warning = FALSE, message = FALSE}
+
+load("C:/Users/ZacharyHerold/Documents/DATA606/Lab4a/more/ames.RData")
+
+head(ames[1:6,1:7])
+```
+
+
+```{r}
+area <- ames$Gr.Liv.Area
+price <- ames$SalePrice
+hist(area)
+```
+
+## Exercise 1
+
+Describe this population distribution.
+
+It has a right-skew, is non-symmetrical and unimodal, seems lognormal.
+
+```{r}
+mean(area)
+```
+The mean of the population is nearly 1500. 
+
+
+## Exercise 2
+
+Describe the distribution of this sample. How does it compare to the distribution of the population?
+
+```{r}
+samp1 <- sample(area, 50)
+hist(samp1, breaks = 10)  
+```
+
+It is unclear from first glance if the right-skew is retained in the sampling distribution. 
+
+```{r}
+qqnorm(samp1)
+qqline(samp1)
+```
+
+The Q-Q Plot makes apparent the right skew of the sampling data, with a few extreme positive outliers.
+
+## Exercise 3
+Take a second sample, also of size 50, and call it samp2. How does the mean of samp2 compare with the mean of samp1? Suppose we took two more samples, one of size 100 and one of size 1000. Which would you think would provide a more accurate estimate of the population mean?
+
+```{r}
+samp2 <- sample(area, 50)
+print(c(mean(samp1), mean(samp2)))
+```
+
+```{r}
+samp3 <- sample(area, 100)
+samp4 <- sample(area, 1000)
+print(c(mean(samp3), mean(samp4)))
+```
+
+The best point estimate is the one based on the largest sample size of 1000. It gets closer to the population mean of 1500. 
+
+
+## Exercise 4
+
+How many elements are there in sample_means50? Describe the sampling distribution, and be sure to specifically note its center. Would you expect the distribution to change if we instead collected 50,000 sample means?
+
+There are 50 elements in sample_means50, the number of means calculated. The center is close to 1500. As the number of observations increases the distribution gets tighter around the point estimate.  
+
+## Exercise 5
+
+To make sure you understand what you've done in this loop, try running a smaller version. Initialize a vector of 100 zeros called sample_means_small. Run a loop that takes a sample of size 50 from area and stores the sample mean in sample_means_small, but only iterate from 1 to 100. How many elements are there in this object called sample_means_small? What does each element represent?
+
+```{r}
+sample_means_small <- rep(0, 100)
+
+for(i in 1:100){
+  samp <- sample(area, 50)
+  sample_means_small[i] <- mean(samp)
+}
+
+sample_means_small
+```
+
+```{r}
+length(sample_means_small)
+mean(sample_means_small)
+sd(sample_means_small)
+```
+
+There are 100 elements in this vector, representing point estimates (sample means) of the area population. 
+
+
+## Exercise 6
+
+When the sample size is larger, what happens to the center? What about the spread?
+
+```{r}
+sample_means_2 <- rep(0, 10000)
+
+for(i in 1:10000){
+  samp <- sample(area, 50)
+  sample_means_2[i] <- mean(samp)
+}
+
+mean(sample_means_2)
+sd(sample_means_2)
+```
+
+The center should begin to more closely approximate the population mean. The spread should also decrease. The larger SD here however does not reflect that. 
+
+
+### On your own
+
+### (1) 
+
+Take a random sample of size 50 from price. 
+Using this sample, what is your best point estimate of the population mean?
+
+Here is a summary of the actual price data, with mean of 180,796. 
+
+```{r}
+summary(price)
+```
+
+```{r}
+samp2 <- sample(price, 50)
+summary(samp2)
+```
+
+Ignoring the population mean, the best approximation we have here is the mean of the random sample.
+
+
+### (2) 
+
+Since you have access to the population, simulate the sampling distribution for x¯price by taking 5000 samples from the population of size 50 and computing 5000 sample means. Store these means in a vector called sample_means50. Plot the data, then describe the shape of this sampling distribution. Based on this sampling distribution, what would you guess the mean home price of the population to be? 
+
+
+
+```{r}
+par(mfrow = c(1, 1))
+
+sample_means50 <- rep(NA, 5000)
+
+for(i in 1:5000){
+  samp <- sample(price, 50)
+  sample_means50[i] <- mean(samp)
+}
+
+summary(sample_means50)
+```
+
+Based on this sample, the mean is 180,788, very close to the actual price data, with mean of 180,796. 
+
+
+```{r}
+hist(sample_means50)
+```
+
+
+```{r}
+qqnorm(sample_means50)
+qqline(sample_means50)
+```
+
+The Q-Q Plot will have increasingly upturned ends as the sample size increases, indicating the tight boundness around the point estimate. But the shape of the distribution is symmetrical.
+
+
+### (3) 
+
+Change your sample size from 50 to 150, then compute the sampling distribution using the same method as above, and store these means in a new vector called sample_means150. Describe the shape of this sampling distribution, and compare it to the sampling distribution for a sample size of 50. Based on this sampling distribution, what would you guess to be the mean sale price of homes in Ames?
+  
+```{r}
+sample_means150 <- rep(NA, 5000)
+
+for(i in 1:5000){
+  samp <- sample(price, 150)
+  sample_means150[i] <- mean(samp)
+}
+
+summary(sample_means150)
+```
+  
+The better point estimate is the mean here.
+
+```{r}
+par(mfrow = c(2, 1))
+hist(sample_means50, breaks = 25, xlim = c(140000, 230000))
+hist(sample_means150, breaks = 25, xlim = c(140000, 230000))
+```
+
+This shows the tighter fit of the distribution about the mean. 
+
+```{r}
+qqnorm(sample_means150)
+qqline(sample_means150)
+```
+
+The Q-Q plot shows the same upward-turned ends, but no more apparent than with the smaple size of 50. 
+
+
+### (4)
+
+Of the sampling distributions from 2 and 3, which has a smaller spread? If we're concerned with making estimates that are more often close to the true value, would we prefer a distribution with a large or small spread?
+
+```{r}
+sd(sample_means50)
+sd(sample_means150)
+```
+
+The SD is much lower for the sample distribution based on 150 observations. The small spread pinpoints the mean better. 
+
