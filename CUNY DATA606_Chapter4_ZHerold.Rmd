@@ -1,0 +1,253 @@
+---
+title: "CUNY DATA606_Ch4_ZHerold"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Chapter 4: Foundations for Inference
+
+Submitted by Zachary Herold	
+Graded Problems: 4.4, 4.14, 4.24, 4.26, 4.34, 4.40, 4.48
+
+
+### 4.4 Heights of adults. 
+
+(a) What is the point estimate for the average height of active individuals? What about the median?
+
+The point estimate is the sample mean of 171.1. The median is reported as 170.3. 
+
+(b) What is the point estimate for the standard deviation of the heights of active individuals?
+What about the IQR?
+
+The point estimate is the sample standard deviation of 9.4. The IQR is 177.8 (Q3) - 163.8 (Q1) = 14.0.
+
+(c) Is a person who is 1m 80cm (180 cm) tall considered unusually tall? And is a person who is
+1m 55cm (155cm) considered unusually short? Explain your reasoning.
+
+```{r}
+Z.180 <- (180-171.1)/9.4
+Z.155 <- (155-171.1)/9.4 
+print(c(Z.180, Z.155))
+```
+
+```{r}
+print(c(1 - pnorm(Z.180), pnorm(Z.155)))
+```
+
+180cm is less than 1 standard deviation from the mean, expected to occur about 17.2% of the time, a fairly typical result. 
+155cm is 1.7 standard deviations from the mean, expected to occur about 4.3% of the time, a fairly unusual result. 
+
+
+(d) The researchers take another random sample of physically active individuals. Would you
+expect the mean and the standard deviation of this new sample to be the ones given above?
+Explain your reasoning.
+
+One would expect the results to be different as they are randomly generated. However, since the sample size is large (507 adults), they should be relatively close to the previous results.
+
+
+(e) The sample means obtained are point estimates for the mean height of all active individuals,
+if the sample of individuals is equivalent to a simple random sample. What measure do we
+use to quantify the variability of such an estimate? Compute
+this quantity using the data from the original sample under the condition that the data are a
+simple random sample.
+
+Margin of error quantifies the variability in estimate. This multiplies the z-score times the standard deviation of the sample divided by the square root of the sample size. With a confidence level of 90%, we calculate the margin of error as follows:
+
+```{r}
+ME <- 1.96 * 9.4 / sqrt(507)
+ME
+```
+
+
+### 4.14 Thanksgiving spending, Part I. 
+
+To get an estimate of consumer spending, 436 randomly sampled American adults were surveyed. Daily consumer spending for the six-day period after Thanksgiving, spanning the Black Friday weekend and Cyber Monday, averaged $84.71. A 95% confidence interval based on this sample is ($80.31, $89.11). Determine whether the following statements are true or false, and explain your reasoning.
+
+(a) We are 95% confident that the average spending of these 436 American adults is between $80.31 and $89.11.
+
+False. The sample consists of the 436 adults. We know the mean for them, and can be 100% sure it is in the confidence interval. Inference is made on the population parameter, not the point estimate. The point estimate is always in the confidence interval.
+
+(b) This confidence interval is not valid since the distribution of spending in the sample is right skewed.
+
+False. Given the large sample size and Central Limit Theorem, the sample mean will be nearly normal, allowing for the method normal approximation described.
+
+(c) 95% of random samples have a sample mean between $80.31 and $89.11.
+
+False. Each random sample will generate a new confidence interval. The confidence interval is not about a sample mean.
+
+(d) We are 95% confident that the average spending of all American adults is between $80.31 and $89.11.
+
+True. 
+
+(e) A 90% confidence interval would be narrower than the 95% confidence interval since we don't need to be as sure about our estimate.
+
+True. 
+
+(f) In order to decrease the margin of error of a 95% confidence interval to a third of what it is now, we would need to use a sample 3 times larger.
+
+False.  In the calculation of the standard error, we divide the standard deviation by the square root of the sample size. To cut the SE (or margin of error) into a third, we would need to sample 9 times the number of people in the initial sample.
+
+(g) The margin of error is 4.4. 
+
+True. 89.11 - 84.71 = 4.40  This is the upper boundary of the confidence interval minus the sample mean (point estimate).
+
+
+
+### 4.24 Gifted children, Part I. 
+
+Researchers investigating characteristics of gifted children collected data from schools in a large city on a random sample of thirty-six children who were identified
+as gifted children soon after they reached the age of four. The following histogram shows the distribution of the ages (in months) at which these children first counted to 10 successfully. 
+
+(a)	Are conditions for inference satisfied?
+
+A sample size of 36 is sufficiently large, such that the distribution of random sample means will be nearly normal, allowing for the method normal approximation described.
+
+(b)  Perform a hypothesis test to evaluate if these data provide convincing evidence that the average age at which gifted children fist count to 10 successfully is less than the general average of 32 months. Use a significance level of 0.10.
+
+H0 : ??(regular) - ??(gifted) = 0
+HA : ??(regular) - ??(gifted) > 0
+
+```{r}
+SE <- 4.31 / sqrt(36)
+Z.32 <- ( 32 - 30.69 ) / SE
+Z.32
+1 - pnorm(Z.32)
+```
+
+Z = 1.82 >>>  p-value = 0.03, which is less than 0.10
+
+The data provides convincing evidence that the age of gifted students counting to 10 is di???erent from that of the general population.
+
+(c) Interpret the p-value in context of the hypothesis test and the data.
+
+The p-value of 0.03 is less than the significance level. This means that the probably of the point estimate occurring, given that the null hypothesis is true, is sufficiently low. So we reject the null hypothesis in favor of the alternative.
+
+
+(d) Calculate a 90% confidence interval for the average age at which gifted children first count to 10 successfully.
+
+```{r}
+age.high <- 30.69 + (1.645 * 4.31 / sqrt(36))
+age.low <- 30.69 - (1.645 * 4.31 / sqrt(36))
+print(c(age.low, age.high))
+```
+
+(e) Do your results from the hypothesis test and the confidence interval agree? Explain.
+
+Yes, they are consistent, as the mean age of non-gifted children counting to 10 is beyond the higher bound of the confidence interval.
+
+
+
+### 4.26 Gifted children, Part II. 
+
+(a) Perform a hypothesis test to evaluate if these data provide convincing evidence that the average
+IQ of mothers of gifted children is di???erent than the average IQ for the population at large,
+which is 100. Use a significance level of 0.10.
+
+H0 : ??(regularIQ) - ??(giftedIQ) = 0
+HA : ??(regularIQ) - ??(giftedIQ) <> 0
+
+```{r}
+SE <- 6.5 / sqrt(36)
+Z.118 <- ( 118.2 - 100 ) / SE
+Z.118
+2 * (1 - pnorm(Z.118))
+```
+
+Z = 16.8 >>>  p-value = approx. 0.00, which is less than 0.10
+
+The data provides convincing evidence that the  of mother's IQ gifted students is di???erent from that of the general population.
+
+Z(118.2) = (118.2 - 100)/6.5 = 2.8
+
+
+(b)	Calculate a 90% confidence interval for the average IQ of mothers of gifted children.
+
+```{r}
+IQ.high <- 118.2 + 1.645 * 6.5 / sqrt (36)
+IQ.low <- 118.2 - 1.645 * 6.5 / sqrt (36)
+print(c(IQ.low, IQ.high))
+```
+
+(c)	Do your results from the hypothesis test and the confidence interval agree? Explain.
+
+The average IQ of 100 is far outside the confidence interval, suggesting that it is not at all a feasible situation. 
+
+
+### 4.34 CLT. 
+
+Define the term "sampling distribution" of the mean, and describe how the shape,
+center, and spread of the sampling distribution of the mean change as sample size increases.
+
+The sampling distribution is the distribution of randomly generated means, given the same sample size. 
+
+The shape is expected to be normal if the population itself is normally distributed or if the selection is independently derived (with <10% of populations values in the sample, and sample size of at least 30). 
+The distribution center is expected to be close to the population mean. 
+The spread is expected to be tighter the higher the sample size.
+
+
+
+### 4.40 CFLBs. 
+
+A manufacturer of compact fluorescent light bulbs advertises that the distribution of the lifespans of these light bulbs is nearly normal with a mean of 9,000 hours and a standard
+deviation of 1,000 hours.
+
+(a)	What is the probability that a randomly chosen light bulb lasts more than 10,500 hours?
+
+```{r}
+Z.10500 <- (10500 - 9000) / 1000
+Z.10500
+1 - pnorm(Z.10500)
+```
+
+About 6.7%, with 10,500 hours about 1.5 standard deviations above the mean. 
+
+(b) Describe the distribution of the mean lifespan of 15 light bulbs.
+
+We should expect the mean lifespan of 15 light bulbs to be centered on the population mean of 9000, with a wide spread due to the low sample size. Since the population is nearly normal, the sample distribution should be normal too despite the low sample size. 
+
+(c) What is the probability that the mean lifespan of 15 randomly chosen light bulbs is more than 10,500 hours?
+
+```{r}
+SE <- 1000 / sqrt(15)
+Z.10500 <- (10500 - 9000) / SE
+Z.10500
+1 - pnorm(Z.10500)
+
+```
+
+The probability is very close to 0. 
+
+(d) Sketch the two distributions (population and sampling) on the same scale.
+
+
+```{r}
+avg <- rep(0,15)
+for (i in 1:15){
+  avg[i] <- mean(rnorm(15, 9000, 1000))
+}
+hist(avg,breaks = 5, xlim = c(6000,12000), probability = TRUE)
+
+x <- 5000:13000
+y <- dnorm(x = x, 9000, 1000)
+
+lines(x = x, y = y, ylab='', lwd=2, col='blue')
+```
+
+
+(e) Could you estimate the probabilities from parts (a) and (c) if the lifespans of light bulbs had
+a skewed distribution?
+ 
+We could not estimate (a) and (c) without a nearly normal population distribution. We also could
+not estimate (c) since the sample size is not sufficient to yield a nearly normal sampling distribution
+if the population distribution is not nearly normal.
+
+
+
+### 4.48 Same observation, different sample size. 
+
+Suppose you conduct a hypothesis test based on a sample where the sample size is n = 50, and arrive at a p-value of 0.08. You then refer back to your notes and discover that you made a careless mistake, the sample size should have been n = 500. Will your p-value increase, decrease, or stay the same? Explain.
+
+The square root of 500 is approximately 3 times the square root of 50. Therefore, the z score should decrease by 1/3 with the larger size, as this figure is in the denominator.  When the z score decreases, the p score increases, as the probability that we would get a z statistic of that value is sufficiently large if the null hypothesis is true.
