@@ -1,0 +1,245 @@
+---
+title: "CUNY DATA606_Lab4b"
+author: "Zachary Herold"
+date: "October 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part b of Lab 4
+
+
+```{r echo=TRUE, warning = FALSE, message = FALSE}
+
+load("C:/Users/ZacharyHerold/Documents/DATA606/Lab4a/more/ames.RData")
+
+head(ames[1:6,1:7])
+```
+
+```{r}
+length(ames$Gr.Liv.Area)
+```
+
+This is the population size (total number of houses).
+
+
+```{r pressure, echo=FALSE}
+population <- ames$Gr.Liv.Area
+set.seed(42); samp <- sample(population, 60)
+samp
+```
+
+And this is a sample taken of 60 house sizes. 
+
+### Exercise 1 
+
+Describe the distribution of your sample. What would you say is the "typical" size within your sample? Also state precisely what you interpreted "typical" to mean.
+
+
+```{r}
+hist(samp, breaks = 10, main = "House sizes (sample size of 60)")
+```
+
+ANS: When broken into 10 bins, the distribution looks to have a rightward skew. The sample size is less than 10% of population, and sample size is large enough, so we should be fine inferring normality however. 
+
+
+```{r}
+summary(samp)
+sd(samp)
+```
+
+The difference between Median and Mean suggests we may not be dealing with an symmetrical density curve. The Max is well more than 2 SD from the mean, while the min is nearly 2. This suggests a slight rightward skew. 
+
+Perhaps the median is a better indicator of the "typical".
+
+```{r}
+qqnorm(samp)
+qqline(samp)
+```
+
+The Q-Q plot reveals there are extreme outliers on both sides of the spectrum. A step-liked pattern appears here for no good reason.
+
+
+### Exercise 2
+
+Would you expect another student's distribution to be identical to yours? Would you expect it to be similar? Why or why not?
+
+ANS: The sample is relatively small which would allow for more discrepancy in our results. Because the sample was randomly drawn with the sample() function, we can be assured difference draw, leading to differing means and standard deviations, the two parameters of the normal curve. 
+
+
+### Exercise 3
+
+For the confidence interval to be valid, the sample mean must be normally distributed and have standard error (sd()/sqrt(n)). What conditions must be met for this to be true?
+
+ANS: Independence (less than 10% of pop size), randomly generated over nearly normal population, or with a large enough sample size to allow CLT to kick in. 
+
+### Exercise 4
+
+What does "95% confidence" mean? 
+
+ANS: This means that we can be 95% confident that the population mean resides with the confidence interval derived by these parameters: critical value (directly related to confidence), sample SD and sample size.  
+
+In this case, we calculate the confidence interval, first finding the critical value:
+
+```{r}
+mean.samp <- mean(samp)
+sd.samp <- sd(samp)
+n <- 60
+
+sign <- .95
+alpha <- 1 - sign
+z <- alpha/2
+crit <- qnorm(1-z)
+crit
+
+```
+
+and then calculating the bounds from that.
+
+```{r}
+lower_vector1 <- mean.samp - crit * sd.samp / sqrt(n) 
+upper_vector1 <- mean.samp + crit * sd.samp / sqrt(n)
+
+lower_vector1 
+upper_vector1
+
+```
+
+### Exercise 5 
+
+Does your confidence interval capture the true average size of houses in Ames? 
+
+```{r}
+mean(population)
+```
+
+ANS: Yes, we are safely witin the 95% confidence interval.
+
+
+If you are working on this lab in a classroom, does your neighbor's interval capture this value?
+
+ANS: It is likely to, but not guaranteed.
+
+
+### Exercise 6 
+
+Each student in your class should have gotten a slightly different confidence interval. What proportion of those intervals would you expect to capture the true population mean? Why? 
+
+ANS: One would expect 95% of them to capture the population mean, as that is how confidence intervals are defined. 
+
+
+## On Your Own
+
+Creating 50 sample means (from 60 random observations), and constructing intervals at the 95% confidence level. 
+
+```{r}
+set.seed(45); samp_mean <- rep(NA, 50)
+samp_sd <- rep(NA, 50)
+n <- 60
+
+for(i in 1:50){
+  samp <- sample(population, n) # obtain a sample of size n = 60 from the population
+  samp_mean[i] <- mean(samp)    # save sample mean in ith element of samp_mean
+  samp_sd[i] <- sd(samp)        # save sample sd in ith element of samp_sd
+}
+
+lower_vector <- samp_mean - 1.96 * samp_sd / sqrt(n) 
+upper_vector <- samp_mean + 1.96 * samp_sd / sqrt(n)
+
+length(lower_vector)
+```
+
+```{r}
+bounds <- NULL
+bounds$lower <- lower_vector
+bounds$upper <- upper_vector
+
+bounds <- data.frame(lower = bounds$low, upper = bounds$upper)
+tail(bounds)
+```
+
+### (1)
+
+Using the following function (which was downloaded with the data set), plot all intervals. 
+
+
+```{r}
+plot_ci(lower_vector, upper_vector, mean(population))
+```
+
+What proportion of your confidence intervals include the true population mean? Is this proportion exactly equal to the confidence level? If not, explain why.
+
+
+```{r}
+pop.mean <- mean(population)
+pop.mean
+```
+
+```{r}
+outside <- pop.mean > upper_vector | pop.mean < lower_vector
+outside
+```
+
+```{r}
+outliers <- sum(outside)
+outliers
+```
+
+```{r}
+outliers / length(lower_vector)
+```
+
+10% of the confidence intervals proved wrong. This was a worse result than the 5% we would have predicted from the confidence level. Likely due to chance. 
+
+
+### (2)
+
+Pick a confidence level of your choosing, provided it is not 95%. What is the appropriate critical value?
+
+For this exercise, I choose a confidence level of 75%.
+
+```{r}
+sign <- .75
+
+alpha <- 1 - sign
+z <- alpha/2
+crit2 <- qnorm(1-z)
+crit2
+```
+
+The critical value is 1.15.
+
+### (3)
+
+Calculate 50 confidence intervals at the confidence level you chose in the previous question. You do not need to obtain new samples, simply calculate new intervals based on the sample means and standard deviations you have already collected. Using the plot_ci function, plot all intervals and calculate the proportion of intervals that include the true population mean. 
+
+```{r}
+
+lower_vector2 <- samp_mean - crit2 * samp_sd / sqrt(n) 
+upper_vector2 <- samp_mean + crit2 * samp_sd / sqrt(n)
+plot_ci(lower_vector2, upper_vector2, mean(population))
+
+```
+
+How does this percentage compare to the confidence level selected for the intervals?
+
+
+```{r}
+outside2 <- pop.mean > upper_vector2 | pop.mean < lower_vector2
+outside2
+```
+
+```{r}
+outliers2 <- sum(outside2)
+outliers2
+```
+
+```{r}
+outliers2 / length(lower_vector2)
+```
+
+In 32% of the simulations, the confidence internal did not accurately predict the population mean, or, we were right 68% of the time. This is less than what we expected constructing 75%. An infinite number of interations would likely get us very close to 75%. 
+
