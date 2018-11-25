@@ -1,0 +1,284 @@
+---
+title: "CUNY DATA606_Wk7"
+author: "Zachary Herold"
+date: "November 24, 2018"
+output: html_document
+---
+
+
+Chapter 7 - Introduction to Linear Regression
+
+    Graded Questions: 7.24, 7.26, 7.30, 7.40
+
+
+```{r setup, include=FALSE, echo=F}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## 7.24 Nutrition at Starbucks, Part I. 
+
+
+The scatterplot below shows the relationship between the number of calories and amount of carbohydrates (in grams) Starbucks food menu items contain. Since Starbucks only lists the number of calories on the display items, we are interested in predicting the amount of carbs a menu item has based on its calorie content.
+
+
+```{r, warning=F}
+starbucks <- data.frame(read.csv("DATA606/Chapters/Ch7/starbucks.csv"), stringsAsFactors = F)
+head(starbucks,10)
+```
+
+(a) Describe the relationship between number of calories and amount of carbohydrates (in grams) that Starbucks food menu items contain.
+
+```{r}
+sp <- ggplot(starbucks, aes(x=calories, y=carb))
+sp + geom_point() + stat_smooth(method=lm, se=T)
+```
+
+```{r}
+cor(starbucks$calories, starbucks$carb)
+```
+
+There is a positive, moderately strong linear association between the number of calories and carbohydrated. 
+
+```{r m1, eval=TRUE}
+m1 <- lm(carb ~ calories, data =starbucks)
+summary(m1)
+```
+
+Based on the summary, the regression line formula is:
+
+\[
+  \hat{y} = 8.94356 + 0.10603 * calories
+\]
+
+
+(b) In this scenario, what are the explanatory and response variables?
+
+Explanatory: number of calories (in thousands). 
+Response: number of carbohydrates (in grams)
+
+
+(c) Why might we want to fit a regression line to these data?
+
+We can predict carbohydrates for a given number of calories using a regression line.
+This may be useful information for people who are on a certain diet. 
+
+
+(d) Do these data meet the conditions required for fitting a least squares line?
+
+```{r}
+starbucks$pred_carb <- 8.94356 + 0.10603 * starbucks$calories
+starbucks$residuals <- starbucks$carb - starbucks$pred_carb
+
+sp <- ggplot(starbucks, aes(x=calories, y=residuals))
+sp + geom_point() + stat_smooth(method=lm, se=F)
+```
+
+No, as constant variability seems not to be met. The variability of points around the least squares line is less for items under 200 calories, as seen from the residual plot. Linearity (as the data show a linear trend) and nearly normal residuals (as can be seen from the histogram of residuals) seem to be met however. 
+
+
+
+## 7.26 Body measurements, Part III. 
+
+Exercise 7.15 introduces data on shoulder girth and height of a group of individuals. The mean shoulder girth is 107.20 cm with a standard deviation of 10.37 cm. The mean height is 171.14 cm with a standard deviation of 9.41 cm. The correlation between height and shoulder girth is 0.67.
+
+```{r}
+bdims <- data.frame(read.table("DATA606/Chapters/Ch7/bdims.txt", header = T), stringsAsFactors = F)
+bdims <- subset(bdims, select = c(hgt, sho.gi))
+head(bdims,10)
+```
+
+```{r}
+cor(bdims$hgt, bdims$sho.gi)
+```
+
+```{r}
+sp <- ggplot(bdims, aes(x=sho.gi, y=hgt))
+sp + geom_point() + stat_smooth(method=lm, se=T)
+```
+
+(a) Write the equation of the regression line for predicting height.
+
+```{r m2, eval=TRUE}
+m2 <- lm(hgt ~ sho.gi, data =bdims)
+summary(m2)
+```
+
+Based on the summary, the regression line formula is:
+
+\[
+  \hat{y} = 105.83246 + 0.60364 * sho.gi
+\]
+
+
+(b) Interpret the slope and the intercept in this context.
+
+b1: For each additional cm in shoulder girth, the model predicts an additional 0.60364 cm in height. 
+
+b0: When the shoulder girth is 0 cm ,the height is expected to be 105.83246 cm. 
+It does not make sense to have shoulder girth of 0 cm in this context. Here, the y-intercept serves only to adjust the height of the line and is meaningless by itself.
+
+
+(c) Calculate R2 of the regression line for predicting height from shoulder girth, and interpret it in the context of the application.
+
+Multiple R-squared:  0.4432.  About 44% of the variability in height is accounted for by the model.
+
+
+(d) A randomly selected student from your class has a shoulder girth of 100 cm. Predict the height of this student using the model.
+
+```{r}
+s.sho.gi <- 100
+pred.s.hgt <- 105.83246 + 0.60364 * s.sho.gi
+pred.s.hgt
+```
+
+
+(e) The student from part (d) is 160 cm tall. Calculate the residual, and explain what this residual means.
+
+```{r}
+actual.s.hgt <- 160
+s.residual <- actual.s.hgt - pred.s.hgt
+s.residual
+```
+
+It means the student is about 6.2 cm less than would be predicted by the model. 
+
+
+(f) A one year old has a shoulder girth of 56 cm. Would it be appropriate to use this linear model to predict the height of this child?
+
+```{r}
+min(bdims$sho.gi)
+```
+
+No, this calculation would require extrapolation, as it is less than the minimum shoulder girth in the observational data. 
+
+
+
+## 7.30 Cats, Part I. 
+
+
+The following regression output is for predicting the heart weight (in g) of cats from their body weight (in kg). The coefficients are estimated using a dataset of 144 domestic cats.
+
+```{r}
+cats <- data.frame(read.csv("DATA606/Chapters/Ch7/cats.csv"))
+head(cats,10)
+```
+
+
+```{r}
+sp <- ggplot(cats, aes(x=Bwt, y=Hwt))
+sp + geom_point() + stat_smooth(method=lm, se=T)
+```
+
+```{r m3, eval=TRUE}
+m3 <- lm(Hwt ~ Bwt, data =cats)
+summary(m3)
+```
+
+(a) Write out the linear model.
+
+Based on the summary, the regression line formula is:
+
+\[
+  \hat{y} = -0.3567 + 4.0341 * Bwt
+\]
+
+
+(b) Interpret the intercept.
+
+b0: When the cat weight is 0 kg, the heart weight is expected to be -0.3567 g. 
+
+It neither makes sense to have a cat of 0 weight, or a heart of negative weight. Here, the y-intercept serves only to adjust the weight of the line and is meaningless by itself.
+
+
+(c) Interpret the slope.
+
+b1: For each additional kg in cat body weight, the model predicts an additional 4.0341g in heart weight. 
+
+
+(d) Interpret R2.
+
+Multiple R-squared:  0.6466.  About 65% of the variability in heart weight is accounted for by the model.
+
+
+(e) Calculate the correlation coefficient.
+
+```{r}
+cor(cats$Bwt, cats$Hwt)
+```
+
+
+## 7.40 Rate my professor. 
+
+Many college courses conclude by giving students the opportunity to evaluate the course and the instructor anonymously. However, the use of these student evaluations as an indicator of course quality and teaching e???ectiveness is often criticized because these measures may reflect the influence of non-teaching related characteristics, such as the physical appearance of the instructor. Researchers at University of Texas, Austin collected data on teaching evaluation score (higher score means better) and standardized beauty score (a score of 0 means average, negative score means below average, and a positive score means above average) for a sample of 463 professors. The scatterplot below shows the relationship between these variables, and also provided is a regression output for predicting teaching evaluation score from beauty score.
+
+```{r}
+prof_evals <- data.frame(read.csv("DATA606/Chapters/Ch7/prof_evals.csv"))
+prof_evals <- subset(prof_evals, select = c(courseevaluation, btystdave))
+head(prof_evals,10)
+```
+
+```{r}
+sp <- ggplot(prof_evals, aes(x=btystdave, y=courseevaluation))
+sp + geom_point() + stat_smooth(method=lm, se=T)
+```
+
+```{r}
+mean(prof_evals$btystdave)
+mean(prof_evals$courseevaluation)
+```
+
+
+(a) Given that the average standardized beauty score is -0.0883 and average teaching evaluation score is 3.9983, calculate the slope. 
+
+```{r m4, eval=TRUE}
+m4 <- lm(courseevaluation ~ btystdave, data = prof_evals)
+summary(m4)
+```
+
+The slope is the estimate of the btystdave coefficient (0.13300)
+
+\[
+  \hat{y} = 4.01002 + 0.13300 * Beauty factor
+\]
+
+
+(b) Do these data provide convincing evidence that the slope of the relationship between teaching evaluation and beauty is positive? Explain your reasoning.
+
+The Multiple R-squared is only 0.03574, suggesting only 3.6% of the evaluation result is predicated on beauty. 
+
+
+
+(c) List the conditions required for linear regression and check if each one is satisfied for this model based on the following diagnostic plots.
+
+When fitting a least squares line, we generally require:
+
+Linearity. The data shows very weak correlation. There is not an obvious relationship between the variables. 
+
+```{r}
+cor(prof_evals$courseevaluation, prof_evals$btystdave)
+```
+
+
+Nearly normal residuals. Generally the residuals must be nearly normal. From the histogram below there looks to be a skew to the left.  
+
+
+```{r hist-res, eval=TRUE}
+prof_evals$pred_eval <- 4.01002 + 0.13300 * prof_evals$btystdave
+prof_evals$residuals <- prof_evals$courseevaluation - prof_evals$pred_eval
+hist(prof_evals$residuals)
+```
+
+
+Constant variability. The variability of points around the least squares line remains
+roughly constant.
+
+
+```{r}
+sp <- ggplot(prof_evals, aes(x=btystdave, y=residuals))
+sp + geom_point() + stat_smooth(method=lm, se=F)
+```
+
+The variability seems unconstant, with more strongly negative residuals. It seems a linear regression model does not apply, and there is no evident relationship between beauty and course evaluation.  
+
+
