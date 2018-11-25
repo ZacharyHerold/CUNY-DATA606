@@ -1,0 +1,296 @@
+---
+title: 'Inference for numerical data'
+output:
+  html_document:
+    css: ./lab.css
+    highlight: pygments
+    theme: cerulean
+  pdf_document: default
+---
+
+## North Carolina births
+
+In 2004, the state of North Carolina released a large data set containing 
+information on births recorded in this state. This data set is useful to 
+researchers studying the relation between habits and practices of expectant 
+mothers and the birth of their children. We will work with a random sample of 
+observations from this data set.
+
+## Exploratory analysis
+
+Load the `nc` data set into our workspace.
+
+```{r load-data, eval=TRUE}
+library(ggplot2)
+load("more/nc.RData")
+head(nc)
+```
+
+We have observations on 13 different variables, some categorical and some 
+numerical. The meaning of each variable is as follows.
+
+variable         | description
+---------------- | -----------
+`fage`           | father's age in years.
+`mage`           | mother's age in years.
+`mature`         | maturity status of mother.
+`weeks`          | length of pregnancy in weeks.
+`premie`         | whether the birth was classified as premature (premie) or full-term.
+`visits`         | number of hospital visits during pregnancy.
+`marital`        | whether mother is `married` or `not married` at birth.
+`gained`         | weight gained by mother during pregnancy in pounds.
+`weight`         | weight of the baby at birth in pounds.
+`lowbirthweight` | whether baby was classified as low birthweight (`low`) or not (`not low`).
+`gender`         | gender of the baby, `female` or `male`.
+`habit`          | status of the mother as a `nonsmoker` or a `smoker`.
+`whitemom`       | whether mom is `white` or `not white`.
+
+1.  What are the cases in this data set? How many cases are there in our sample?
+
+There are 13 cases. 
+
+```{r summary, eval=TRUE}
+summary(nc)
+```
+
+As you review the variable summaries, consider which variables are categorical 
+and which are numerical. For numerical variables, are there outliers? If you 
+aren't sure or want to take a closer look at the data, make a graph.
+
+```{r}
+str(nc)
+```
+
+The numeric variables are fage, mage, weeks, visits, gained, and weight. There are plenty of outliers in terms of length of pregnancy and weight of newborn, as can be seen from the boxplots below. 
+
+
+```{r}
+p <- ggplot(nc, aes(x=1, y=weeks))
+p + geom_boxplot()
+```
+
+
+```{r}
+p <- ggplot(nc, aes(x=1, y=weight))
+p + geom_boxplot()
+```
+
+Consider the possible relationship between a mother's smoking habit and the 
+weight of her baby. Plotting the data is a useful first step because it helps 
+us quickly visualize trends, identify strong associations, and develop research
+questions.
+
+2.  Make a side-by-side boxplot of `habit` and `weight`. What does the plot 
+highlight about the relationship between these two variables?
+
+```{r}
+p <- ggplot(nc, aes(x=habit, y=weight))
+p + geom_boxplot()
+```
+
+
+
+The box plots show how the medians of the two distributions compare, but we can
+also compare the means of the distributions using the following function to 
+split the `weight` variable into the `habit` groups, then take the mean of each
+using the `mean` function.
+
+```{r by-means, eval=TRUE}
+by(nc$weight, nc$habit, mean)
+```
+
+There is an observed difference, but is this difference statistically 
+significant? In order to answer this question we will conduct a hypothesis test
+.
+
+## Inference
+
+3.  Check if the conditions necessary for inference are satisfied. Note that 
+you will need to obtain sample sizes to check the conditions. You can compute 
+the group size using the same `by` command above but replacing `mean` with 
+`length`.
+
+```{r, eval=TRUE}
+by(nc$weight, nc$habit, length)
+```
+
+. The individual observations must be independent. A random sample from less
+than 10% of the population ensures the observations are independent. In experiments,
+we generally require that subjects are randomized into groups. 
+
+. Other conditions focus on sample size and skew. For example, if the sample
+size is too small, the skew too strong, or extreme outliers are present, then the normal model for the sample mean will fail.
+
+
+4.  Write the hypotheses for testing if the average weights of babies born to 
+smoking and non-smoking mothers are different.
+
+```{r}
+mean.nonsmoker <- round(mean(nc$weight[nc$habit == "nonsmoker"], na.rm = T),3)
+mean.smoker <- round(mean(nc$weight[nc$habit == "smoker"], na.rm = T),3)
+print(paste0("newborn weight of non-smoking mother: ", mean.nonsmoker))
+print(paste0("newborn weight of smoking mother: ", mean.smoker))
+mean.diff <- mean.nonsmoker - mean.smoker 
+print(paste0("difference in means: ", mean.diff))
+```
+
+```{r}
+var.nonsmoker <- round(var(nc$weight[nc$habit == "nonsmoker"], na.rm=T),3)
+var.smoker <- round(var(nc$weight[nc$habit == "smoker"], na.rm=T),3)
+se <- round(sqrt((var.nonsmoker/ 873) + (var.smoker/126)),3)
+t.score <- round(abs(qt(0.025, 872)),3)
+print(paste0("estimated critical t-score: ", t.score))
+print(paste0("standard error: ", se))
+
+low.bound <- round((mean.diff - t.score * se), 3)
+high.bound <- round((mean.diff + t.score * se), 3)
+print(paste0("95% confidence interval: ", low.bound, ", ", high.bound))
+```
+
+As the confidence interval is always positive, we can say with confidence the difference in newborn is NOT due to chance. 
+
+
+Next, we introduce a new function, `inference`, that we will use for conducting
+hypothesis tests and constructing confidence intervals. 
+
+```{r, eval=TRUE, tidy=FALSE}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ht", null = 0, 
+          alternative = "twosided", method = "theoretical")
+```
+
+
+5.  Change the `type` argument to `"ci"` to construct and record a confidence 
+interval for the difference between the weights of babies born to smoking and 
+non-smoking mothers.
+
+By default the function reports an interval for ($\mu_{nonsmoker} - \mu_{smoker}$)
+. We can easily change this order by using the `order` argument:
+
+```{r, eval=TRUE, tidy=FALSE}
+inference(y = nc$weight, x = nc$habit, est = "mean", type = "ci", null = 0, 
+          alternative = "twosided", method = "theoretical", 
+          order = c("smoker","nonsmoker"))
+```
+
+* * *
+
+## On your own
+
+### 1 
+
+-   Calculate a 95% confidence interval for the average length of pregnancies 
+(`weeks`) and interpret it in context. 
+
+
+```{r}
+mean.weeks <- round(mean(nc$weeks, na.rm=T),3)
+print(paste0("Mean number of weeks of pregnancy: ", mean.weeks))
+```
+
+```{r}
+sd.weeks <- round(sd(nc$weeks, na.rm=T),3)
+print(paste0("Standard deviation of weeks of pregnancy: ", sd.weeks))
+```
+
+```{r}
+conflevel <- 0.95
+z.score <- abs(qnorm((1-conflevel)/2))
+se.weeks <- round(z.score * (sd.weeks / (sqrt(length(nc$weeks)))),3)
+low.bound.weeks <- mean.weeks - se.weeks
+high.bound.weeks <- mean.weeks + se.weeks
+print(paste0("95% confidence interval of avg. weeks of pregnancy: [", low.bound.weeks, ", ", high.bound.weeks, "]"))
+
+```
+
+### 2
+
+-   Calculate a new confidence interval for the same parameter at the 90% 
+confidence level. You can change the confidence level by adding a new argument 
+to the function: `conflevel = 0.90`.
+
+
+```{r}
+conflevel <- 0.90
+z.score <- abs(qnorm((1-conflevel)/2))
+se.weeks <- round(z.score * (sd.weeks / (sqrt(length(nc$weeks)))),3)
+low.bound.weeks <- mean.weeks - se.weeks
+high.bound.weeks <- mean.weeks + se.weeks
+print(paste0("90% confidence interval of avg. weeks of pregnancy: [", low.bound.weeks, ", ", high.bound.weeks, "]"))
+```
+
+### 3
+
+-   Conduct a hypothesis test evaluating whether the average weight gained by 
+younger mothers is different than the average weight gained by mature mothers.
+
+The null hypothesis states that the weight gain of young and mature mothers is equivalent. 
+
+```{r}
+mean.fage <- round(mean(nc$fage, na.rm = T),3)
+print(paste0("Mean age of all mothers: ", mean.fage))
+mean.gained.young <- round(mean(nc$gained[nc$fage < mean.fage], na.rm = T),3) 
+mean.gained.mature <- round(mean(nc$gained[nc$fage > mean.fage], na.rm = T),3) 
+print(paste0("Mean weight gain by young mothers: ", mean.gained.young))
+print(paste0("Mean weight gain by mature mothers: ", mean.gained.mature))
+```
+
+```{r}
+by(nc$fage > mean.fage, nc$fage < mean.fage, length)
+```
+
+
+```{r}
+mean.gained.diff <- mean.gained.young - mean.gained.mature
+var.young <- round(var(nc$gained[nc$fage < mean.fage], na.rm=T),3)
+var.mature <- round(var(nc$gained[nc$fage > mean.fage], na.rm=T),3)
+se <- round(sqrt((var.young/ 425) + (var.mature/404)),3)
+t.score <- round(abs(qt(0.025, 425)),3)
+print(paste0("estimated critical t-score: ", t.score))
+print(paste0("standard error: ", se))
+
+low.bound <- round((mean.diff - t.score * se), 3)
+high.bound <- round((mean.diff + t.score * se), 3)
+print(paste0("95% confidence interval: ", low.bound, ", ", high.bound))
+```
+
+As 0 can be found in the 95% confidence interval, we cannot reject the null hypothesis. There is not sufficient evidence that the weight gain differs between young and mature mothers. 
+
+
+### 4
+
+-   Now, a non-inference task: Determine the age cutoff for younger and mature 
+mothers. Use a method of your choice, and explain how your method works.
+
+
+```{r}
+sp <- ggplot(nc, aes(x=fage, y=gained))
+sp + geom_point() + stat_smooth(method=lm, se=F)
+```
+
+In the hypothesis test, I used the mean age of 30 years old and 3 months. Viewing the scatterplot, there is no basis for determining a better break-off point, when age suddenly has an impact on weight gain.  
+
+### 5 
+
+-   Pick a pair of numerical and categorical variables and come up with a 
+research question evaluating the relationship between these variables. 
+Formulate the question in a way that it can be answered using a hypothesis test
+and/or a confidence interval. Answer your question using the `inference` 
+function, report the statistical results, and also provide an explanation in 
+plain language.
+
+I would perform a student to determine if race has an impact on the number of hospital visits during pregnancy. 
+
+My hypothesis test is that
+
+Average visits of white mothers - Average visits of non-white mothers = 0
+
+
+
+```{r inf-weight-habit-ci, eval=TRUE, tidy=FALSE}
+inference(y = nc$visits, x = nc$whitemom, est = "mean", type = "ci", null = 0, 
+          alternative = "onesided", method = "theoretical", 
+          order = c("white","not white"))
+```
+
+The 95 % Confidence interval is ( 0.0918 , 1.2565 ). We have sufficient evidence to conclude that white women did go to the doctor more, but not much more than one-visit on average. 
+
